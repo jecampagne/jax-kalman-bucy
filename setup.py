@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 
 
-NAME = "jaxman"
+NAME = "jax-kalman-bucy"
 
 
 def _get_version():
@@ -25,13 +25,13 @@ with open("test_requirements.txt", "r") as f:
 setup(
     name=NAME,
     version=_get_version(),
-    author="Victor Gruselius",
-    author_email="victor.gruselius@gmail.com",
-    description="Vectorized Kalman filters in JAX",
+    author="Jean-Eric Campagne",
+    author_email="jeaneric.campagne@gmail.com",
+    description="Kalman-Bucy simple filter in JAX",
     packages=find_packages(include=f"{NAME}.*"),
     install_requires=install_requires,
     tests_require=test_requires,
-    python_requires=">=3.6.0",
+    python_requires=">=3.8.0",
     license_files=("LICENSE",),
-    license="MIT"
+    license="Educational Community License"
 )
