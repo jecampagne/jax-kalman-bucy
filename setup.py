@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 
 
-NAME = "jax-kalman-bucy"
+NAME = "jaxkalm"
 
 
 def _get_version():
@@ -33,5 +33,5 @@ setup(
     tests_require=test_requires,
     python_requires=">=3.8.0",
     license_files=("LICENSE",),
-    license="Educational Community License"
+    license="MIT"
 )
