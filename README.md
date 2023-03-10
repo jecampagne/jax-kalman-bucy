@@ -79,4 +79,4 @@ Resulting in the following pretty picture
 </div>
 
 # Disclaimers
-Note that this project is not endorsed, affiliated or supported by Google/JAX, the name is just a mash-up of Kalman and JAX.
+Note that this project is not endorsed, affiliated or supported by Google/JAX, the name is just a mash-up of Kalman, Bucy and JAX.
