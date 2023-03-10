@@ -1,5 +1,5 @@
 # About the project
-This is a fork from [jaxman](https://github.com/tingiskhan/jax-kalman) with extensions.  
+An Kalman-Bucy filter implementation in JAX started from a fork of [jaxman](https://github.com/tingiskhan/jax-kalman) with extensions.  One extension considers non equidistant "time" steps, ie. non constante transport F matrix and perturbation Q matrix. In the notation of [wikipedia](https://en.wikipedia.org/wiki/Kalman_filter).
 
 # Getting started
 Follow the below instructions in order to get started.
