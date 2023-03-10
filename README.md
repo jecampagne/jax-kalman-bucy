@@ -11,8 +11,8 @@ Start by [installing JAX](https://jax.readthedocs.io/en/latest/installation.html
 The library is currently not available on pypi, and there are currently no plans on releasing it there.
 
 # Usage
-Beyond the original `KalmanFilter` (alias to `KalmanFilterStd`)  class that deals with equaly spaced observations, the extension provides `KalmanFilterNonEquid` class
-`
+Beyond the original `KalmanFilter` (alias to `KalmanFilterStd`)  class that deals with equaly spaced observations, the extension provides `KalmanFilterNonEquid` class, then one provides functions to get the transport matrix `F` and transport covariance matrix `Q` 
+
 ```python
 from jaxkalm import KalmanFilterNonEquid
 import jax.random as jaxrnd
@@ -51,16 +51,17 @@ y_fit = mean_fn(tMes, p_fit) # (t,y(t)) from fitted model
 # The vector state is  X=(y,dy/dx)^T
 #
 
-# prediction: transport matrix k-1 -> k of state vector
+# prediction: transport matrix k-1 -> k of state vector  (F mtx)
+# dt is the difference of "time" between the next obsservation and the current state
 def trans_mat_func(dt: float) -> jnp.array:
    return  jnp.array([[1., dt],[0.,1.]]) 
-def trans_cov_func(dt: float) -> jnp.array:
+def trans_cov_func(dt: float) -> jnp.array:    # (Q mtx)
     return jnp.zeros(shape=(2,2))   #no perturbation during prediction
 
 
 # observation aka measurements
-obs_mat = jnp.array([1.0,0.])              # projection matrix from mesurement to vector state (the measure is y_mes only)
-obs_cov = sigma_obs**2                     # error (here 1D) on mesurement
+obs_mat = jnp.array([1.0,0.])              # H projection matrix from mesurement to vector state (the measure is y_mes only)
+obs_cov = sigma_obs**2                     # error (here 1D) on mesurement (R matrix)
 
 # prepare Kalman filter
 kf = KalmanFilterNonEquid(trans_mat_func, trans_cov_func,
