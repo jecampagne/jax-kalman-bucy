@@ -14,8 +14,11 @@ def to_array(*x: ArrayLike) -> Sequence[jnp.ndarray]:
     Returns:
         jnp.ndarray: a sequence of `jax.numpy.ndarray`.
     """
+    if len(x)==1:
+      return jnp.array(x)
+    else:
+      return tuple(jnp.array(x_) for x_ in x)
 
-    return tuple(jnp.array(x_) for x_ in x)
 
 
 def coerce_covariance(cov: jnp.ndarray) -> jnp.ndarray:
