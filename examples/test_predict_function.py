@@ -9,29 +9,37 @@ import jax
 import jax.scipy as jsc
 from jax.scipy import optimize
 
+#def mean_fn(t,p):
+#    return p[0] + p[1]*t
+
 def mean_fn(t,p):
-    return p[0] + p[1]*t
+    # t shape (N, n) # N number of series, n: number of "time"  samples
+    # p shape (N,2)  
+    p = jnp.atleast_2d(p)
+    t = jnp.atleast_2d(t)
+    
+    return p[:,1,None] * t[:,...] + p[:,0,None]
 
 def lik(p,xi,yi, sigma_obs):
     resid = mean_fn(xi, p)-yi
     return 0.5*jnp.sum((resid/sigma_obs) ** 2) 
 
-def plot(tMes,yMes,sigmaMes,result,fname="test.png",y_fit=None):
+def plot(tObs,yObs,sigmaObs,res,cov_res,fname="test.png",y_fit=None):
 
-    res = result.filtered_means()             # get the vector state at each step
+    #res:  the vector state at each step
+    #cov_res: the vector covariance at each step
 
+    #display arrow for kalman filtering
     y_arr = res[:,0]
-    x_arr = tMes
+    x_arr = tObs
     dx = jnp.ones_like(x_arr)
     dy = res[:,1]
 
-    cov_res = result.filtered_covariances()    # get the vector state covariance matrix at each state
-    cov_res.shape
     y_res_err = jnp.sqrt(cov_res[:,0,0])
 
     
     plt.figure(figsize=(10,8))
-    plt.errorbar(tMes,yMes,yerr=sigmaMes,fmt='o', linewidth=2, capsize=0, c='k', label="data")
+    plt.errorbar(tObs,yObs,yerr=sigmaObs,fmt='o', linewidth=2, capsize=0, c='k', label="data")
     plt.errorbar(x_arr,y_arr,yerr=y_res_err,fmt='o', linewidth=2, capsize=0, c='r', label="Kalman")
 
     plt.quiver(x_arr, y_arr, dx,dy,color="r",
@@ -39,7 +47,7 @@ def plot(tMes,yMes,sigmaMes,result,fname="test.png",y_fit=None):
                scale_units='xy',
                scale=2, width=0.002)
     if y_fit is not None:
-        plt.plot(tMes, y_fit, label="fit MSE")
+        plt.plot(tObs, y_fit, label="fit MSE")
     plt.xlabel("t")
     plt.ylabel("y")
     plt.legend()
@@ -47,7 +55,7 @@ def plot(tMes,yMes,sigmaMes,result,fname="test.png",y_fit=None):
 
     plt.savefig(fname)
 
-
+################
 def testStd():
 
     # test simple equidistant steps, fixed transport state matrix and transport covariance matrix
@@ -62,14 +70,13 @@ def testStd():
     par_true = jnp.array([0.1,0.2])
     sigma_obs = 0.3
 
-    yMes = mean_fn(tMes,par_true) + sigma_obs * jaxrnd.normal(rng_key0,shape=tMes.shape)
-
+    yMes = mean_fn(tMes,par_true).squeeze() + sigma_obs * jaxrnd.normal(rng_key0,shape=tMes.shape)
 
     #BFGS mini
     bfgs_fit= optimize.minimize(lik, jnp.array([0.,0.]),
                                args=(tMes,yMes,sigma_obs), method='BFGS', tol=1e-6, options=None)
     p_fit = bfgs_fit.x
-    y_fit = mean_fn(tMes, p_fit)
+    y_fit = mean_fn(tMes, p_fit).squeeze()
 
     #
     # The vector state is  X=(y,dy/dx)^T
@@ -86,9 +93,11 @@ def testStd():
     result = kf.filter(yMes)                  # iterate the kalman filtering automatic init.
 
     res = result.filtered_means()             # get the vector state at each step
+    cov_res = result.filtered_covariances()   # covariance of vector state
+    
+    plot(tMes,yMes,sigma_obs,res,cov_res,fname="test0.png", y_fit=y_fit)
 
-    plot(tMes,yMes,sigma_obs,result,fname="test0.png", y_fit=y_fit)
-
+###################
 def testNonEquid1():
 
     # test simple equidistant steps in the framework of non equi. steps
@@ -101,13 +110,13 @@ def testNonEquid1():
     tMes = jnp.arange(0.,20.,dT)
     par_true = jnp.array([0.1,0.2])
     sigma_obs = 0.3
-    yMes = mean_fn(tMes,par_true) + sigma_obs * jaxrnd.normal(rng_key0,shape=tMes.shape)
+    yMes = mean_fn(tMes,par_true).squeeze() + sigma_obs * jaxrnd.normal(rng_key0,shape=tMes.shape)
     
     #BFGS mini
     bfgs_fit= optimize.minimize(lik, jnp.array([0.,0.]),
                                args=(tMes,yMes,sigma_obs), method='BFGS', tol=1e-6, options=None)
     p_fit = bfgs_fit.x
-    y_fit = mean_fn(tMes, p_fit)
+    y_fit = mean_fn(tMes, p_fit).squeeze()
 
 
     #
@@ -131,12 +140,13 @@ def testNonEquid1():
 
     result = kf.filter(yMes,tMes)             # iterate the kalman filtering automatic init.
 
+
     res = result.filtered_means()             # get the vector state at each step
+    cov_res = result.filtered_covariances()   # covariance of vector state
+    
+    plot(tMes,yMes,sigma_obs,res,cov_res,fname="test1.png", y_fit=y_fit)
 
-
-    plot(tMes,yMes,sigma_obs,result,fname="test1.png", y_fit=y_fit)
-
-
+###################
 def testNonEquid2():
 
     # test simple non equi. steps
@@ -150,13 +160,13 @@ def testNonEquid2():
 
     par_true = jnp.array([0.1,0.2])
     sigma_obs = 0.3
-    yMes = mean_fn(tMes,par_true) + sigma_obs * jaxrnd.normal(rng_key0,shape=tMes.shape)
+    yMes = mean_fn(tMes,par_true).squeeze() + sigma_obs * jaxrnd.normal(rng_key0,shape=tMes.shape)
 
     #BFGS mini
     bfgs_fit= optimize.minimize(lik, jnp.array([0.,0.]),
                                args=(tMes,yMes,sigma_obs), method='BFGS', tol=1e-6, options=None)
     p_fit = bfgs_fit.x
-    y_fit = mean_fn(tMes, p_fit)
+    y_fit = mean_fn(tMes, p_fit).squeeze()
     
     #
     # The vector state is  X=(y,dy/dx)^T
@@ -178,9 +188,10 @@ def testNonEquid2():
 
 
     result = kf.filter(yMes,tMes)             # iterate the kalman filtering automatic init.
+    res = result.filtered_means()             # get the vector state at each step
+    cov_res = result.filtered_covariances()   # covariance of vector state    
 
-    plot(tMes,yMes,sigma_obs,result,fname="test2.png", y_fit=y_fit)
-
+    plot(tMes,yMes,sigma_obs,res,cov_res,fname="test2.png", y_fit=y_fit)
 
 
 if __name__ == '__main__':
@@ -193,3 +204,5 @@ if __name__ == '__main__':
 
     # test simple non equi. steps
     testNonEquid2()
+
+    
